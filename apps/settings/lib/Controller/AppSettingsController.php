@@ -47,9 +47,18 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\OpenAPI;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
+use OCP\AppFramework\Http\FileDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\NotFoundResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
+use OCP\Files\AppData\IAppDataFactory;
+use OCP\Files\IAppData;
+use OCP\Files\NotFoundException;
+use OCP\Files\NotPermittedException;
+use OCP\Files\SimpleFS\ISimpleFile;
+use OCP\Http\Client\IClientService;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCP\INavigationManager;
@@ -64,9 +73,12 @@ class AppSettingsController extends Controller {
 	/** @var array */
 	private $allApps = [];
 
+	private IAppData $appData;
+
 	public function __construct(
 		string $appName,
 		IRequest $request,
+		IAppDataFactory $appDataFactory,
 		private IL10N $l10n,
 		private IConfig $config,
 		private INavigationManager $navigationManager,
@@ -80,8 +92,10 @@ class AppSettingsController extends Controller {
 		private LoggerInterface $logger,
 		private IInitialState $initialState,
 		private AppDiscoverFetcher $discoverFetcher,
+		private IClientService $clientService,
 	) {
 		parent::__construct($appName, $request);
+		$this->appData = $appDataFactory->get('appstore');
 	}
 
 	/**
@@ -117,6 +131,69 @@ class AppSettingsController extends Controller {
 	public function getAppDiscoverJSON(): JSONResponse {
 		$data = $this->discoverFetcher->get();
 		return new JSONResponse($data);
+	}
+
+	/**
+	 * @PublicPage
+	 * @NoCSRFRequired
+	 *
+	 * Get a image for the app discover section - this is proxied for privacy and CSP reasons
+	 *
+	 * @param string $image
+	 * @throws \Exception
+	 */
+	public function getAppDiscoverMedia(string $fileName): Response {
+		$etag = $this->discoverFetcher->getETag() ?? date_format(new \DateTimeImmutable(), 'Y-m');
+		try {
+			$folder = $this->appData->getFolder('app-discover-cache');
+			// Cleanup old cache folders
+			$allFiles = $folder->getDirectoryListing();
+			foreach ($allFiles as $dir) {
+				if ($dir->getName() !== $etag) {
+					$dir->delete();
+				}
+			}
+		} catch (NotPermittedException $e) {
+			// can be ignored - this is from the cleanup
+		} catch (\Throwable $e) {
+			$folder = $this->appData->newFolder('app-discover-cache');
+		}
+
+		// Get the current cache folder
+		try {
+			$folder = $folder->getFolder($etag);
+		} catch (NotFoundException $e) {
+			$folder = $folder->newFolder($etag);
+		}
+
+		$info = pathinfo($fileName);
+		$hashName = md5($fileName);
+		$allFiles = $folder->getDirectoryListing();
+		// Try to find the file
+		$file = array_filter($allFiles, function (ISimpleFile $file) use($hashName) {
+			return str_starts_with($file->getName(), $hashName);
+		});
+		$file = $file[0] ?? null;
+		// If not found request from Web
+		if ($file === null) {
+			try {
+				$client = $this->clientService->newClient();
+				$fileResponse = $client->get($fileName);
+				$contentType = $fileResponse->getHeader('Content-Type');
+				$file = $folder->newFile($hashName . '.' . base64_encode($contentType) . '.' . $info['extension'], $fileResponse->getBody());
+			} catch (\Throwable $e) {
+				$this->logger->warning('Could not load media file for app discover section', ['media_src' => $fileName, 'exception' => $e]);
+				return new NotFoundResponse();
+			}
+		} else {
+			// File was found so we can get the content type from the file name
+			$contentType = base64_decode(explode('.', $file->getName())[1] ?? '');
+		}
+
+		$response = new FileDisplayResponse($file, Http::STATUS_OK, ['Content-Type' => $contentType]);
+		// cache for 7 days
+		$response->cacheFor(604800, false, true);
+		return $response;
 	}
 
 	private function getAppsWithUpdates() {
