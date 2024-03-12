@@ -1,0 +1,136 @@
+[
+	{
+		"type": "post",
+		"id": "1d41a08e-4aa6-49b3-ad1b-ff2e83bcdc85",
+		"headline": {
+			"en": "Amazing wallpapers",
+			"de": "Bezaubernde Hintergründe"
+		},
+		"text": {
+			"en": "This are the most amazing wallpaers that you can possible have. Get them now!",
+			"de": "Die wohl beeindruckensten Hintergründe die man haben kann. Hol sie dir jetzt!"
+		},
+		"link": "https://example.com/wallpapers",
+		"media": {
+			"alignment": "end",
+			"content": {
+				"en": {
+					"src": [
+						{ "src": "https://nextcloud.com/c/uploads/2023/01/nextcloud-podcast-featured-image-1024x576.png", "mime": "image/webp"}
+					],
+					"alt": "Amazing wallpaper"
+				}
+			}
+		}
+	},
+	{
+		"type": "post",
+		"id": "1d41a08e-4aa6-49b3-ad1b-ff2e83bcdc86",
+		"headline": {
+			"en": "Amazing wallpapers 2",
+			"de": "Bezaubernde Hintergründe"
+		},
+		"text": {
+			"en": "This are the most amazing wallpaers that you can possible have. Get them now!",
+			"de": "Die wohl beeindruckensten Hintergründe die man haben kann. Hol sie dir jetzt!"
+		},
+		"link": "https://example.com/wallpapers",
+		"media": {
+			"alignment": "start",
+			"content": {
+				"en": {
+					"src": [
+						{ "src": "https://nextcloud.com/c/uploads/2023/01/nextcloud-podcast-featured-image-1024x576.png", "mime": "image/webp"}
+					],
+					"alt": "Amazing wallpaper"
+				}
+			}
+		}
+	},
+	{
+		"type": "post",
+		"id": "1d41a08e-4aa6-49b3-ad1b-ff2e83bcdc96",
+		"headline": {
+			"en": "Text only",
+			"de": "Nur Text"
+		},
+		"text": {
+			"en": "This is a post without any media.",
+			"de": "Dies is ein Post ohne jegliche multimediale Elemente."
+		},
+		"link": "https://example.com/text-only"
+	},
+	{
+		"type": "post",
+		"id": "1d41a08e-4aa6-49b3-ad1b-ff2e83bcdc87",
+		"link": "https://example.com/wallpapers",
+		"media": {
+			"alignment": "center",
+			"content": {
+				"en": {
+					"src": [
+						{ "src": "https://nextcloud.com/c/uploads/2023/01/nextcloud-podcast-featured-image-1024x576.png", "mime": "image/webp"}
+					],
+					"alt": "Amazing wallpaper"
+				}
+			}
+		}
+	},
+	{
+		"type": "post",
+		"id": "1d41a08e-4aa6-49b3-ad1b-ff2e83bcdc88",
+		"media": {
+			"alignment": "center",
+			"content": {
+				"en": {
+					"src": [
+						{ "src": "https://github.com/nextcloud/firstrunwizard/raw/master/img/Nextcloud.webm", "mime": "video/webm"},
+						{ "src": "https://github.com/nextcloud/firstrunwizard/raw/master/img/Nextcloud.mp4", "mime": "video/mp4"}
+					],
+					"alt": "HUB Update",
+					"link": "https://example.com/wallpapers"
+				}
+			}
+		}
+	},
+	{
+		"type": "carousel",
+		"id": "1d41a08e-4aa6-49b3-ad1b-ff2e83bcdf96",
+		"headline": {
+			"en": "A carousel",
+			"de": "Ein Karussel"
+		},
+		"content": [
+			{
+				"type": "post",
+				"id": "1d41a08e-4aa6-49b4-ad1b-ff2e83bcdc96",
+				"headline": {
+					"en": "One"
+				},
+				"text": {
+					"en": "This is a post without any media."
+				}
+			},
+			{
+				"type": "post",
+				"id": "1d41a08e-4aa6-49b5-ad1b-ff2e83bcdc96",
+				"headline": {
+					"en": "Two"
+				},
+				"text": {
+					"en": "This is a post without any media."
+				}
+			},
+			{
+				"type": "post",
+				"id": "1d41a08e-4aa6-49b6-ad1b-ff2e83bcdc96",
+				"headline": {
+					"en": "Three"
+				},
+				"text": {
+					"en": "This is a post without any media."
+				}
+			}
+		]
+	}
+]
