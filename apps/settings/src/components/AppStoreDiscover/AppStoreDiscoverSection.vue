@@ -40,6 +40,7 @@ import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
 import logger from '../../logger'
 
 const PostType = defineAsyncComponent(() => import('./PostType.vue'))
+const CarouselType = defineAsyncComponent(() => import('./CarouselType.vue'))
 
 const hasError = ref(false)
 const elements = ref<IAppDiscoverElements[]>([])
@@ -74,6 +75,8 @@ const getComponent = (type) => {
 	console.warn(type)
 	if (type === 'post') {
 		return PostType
+	} else if (type === 'carousel') {
+		return CarouselType
 	}
 	return defineComponent({
 		mounted: () => console.error('Unknown component requested ', type),

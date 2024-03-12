@@ -27,7 +27,7 @@
 			:href="link"
 			:target="link ? '_blank' : undefined"
 			class="app-discover-post__text">
-			<h3>{{ translatedHeadline }}</h3>
+			<component :is="inline ? 'h4' : 'h3'">{{ translatedHeadline }}</component>
 			<p>{{ translatedText }}</p>
 		</component>
 		<component :is="mediaLink ? 'a' : 'div'"
@@ -97,6 +97,12 @@ export default defineComponent({
 			required: false,
 			default: () => null,
 		},
+
+		inline: {
+			type: Boolean,
+			required: false,
+			default: false,
+		}
 	},
 
 	setup(props) {
@@ -178,7 +184,7 @@ export default defineComponent({
 		flex-direction: row-reverse;
 	}
 
-	h3 {
+	h3, h4 {
 		font-size: 24px;
 		font-weight: 600;
 		margin-block: 0 1em;
