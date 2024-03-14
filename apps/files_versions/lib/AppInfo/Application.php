@@ -36,7 +36,7 @@ use OCA\Files_Versions\Capabilities;
 use OCA\Files_Versions\Listener\FileEventsListener;
 use OCA\Files_Versions\Listener\LoadAdditionalListener;
 use OCA\Files_Versions\Listener\LoadSidebarListener;
-use OCA\Files_Versions\Listener\MetadataFileEvents;
+use OCA\Files_Versions\Listener\VersionAuthorListener;
 use OCA\Files_Versions\Versions\IVersionManager;
 use OCA\Files_Versions\Versions\VersionManager;
 use OCP\Accounts\IAccountManager;
