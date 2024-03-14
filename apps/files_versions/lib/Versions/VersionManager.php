@@ -204,4 +204,26 @@ class VersionManager implements IVersionManager, IDeletableVersionBackend, INeed
 		}
 	}
 
+	public function moveVersionsAcrossBackends(IUser $user, Node $source, Node $target): void {
+		$sourceStorage = $source->getStorage();
+		// Look at the parent because the node itself does not exist yet.
+		$targetStorage = $target->getParent()->getStorage();
+
+		// If same storage, nothing to do
+		if ($sourceStorage === $targetStorage) {
+			return;
+		}
+
+		$sourceBackend = $this->getBackendForStorage($sourceStorage);
+		$targetBackend = $this->getBackendForStorage($targetStorage);
+
+		if ($targetBackend instanceof IVersionsImporterBackend) {
+			$versions = $sourceBackend->getVersionsForFile($user, $source);
+			$targetBackend->importVersionsForFile($user, $target, $versions);
+		}
+
+		if ($sourceBackend instanceof IVersionsImporterBackend) {
+			$sourceBackend->clearVersionsForFile($user, $source);
+		}
+	}
 }

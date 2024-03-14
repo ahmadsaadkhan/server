@@ -37,6 +37,7 @@ use OCA\Files_Versions\Listener\FileEventsListener;
 use OCA\Files_Versions\Listener\LoadAdditionalListener;
 use OCA\Files_Versions\Listener\LoadSidebarListener;
 use OCA\Files_Versions\Listener\VersionAuthorListener;
+use OCA\Files_Versions\Listener\VersionStorageMoveListener;
 use OCA\Files_Versions\Versions\IVersionManager;
 use OCA\Files_Versions\Versions\VersionManager;
 use OCP\Accounts\IAccountManager;
@@ -109,6 +110,8 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(LoadAdditionalScriptsEvent::class, LoadAdditionalListener::class);
 		$context->registerEventListener(LoadSidebar::class, LoadSidebarListener::class);
 
+		$context->registerEventListener(BeforeNodeRenamedEvent::class, VersionStorageMoveListener::class);
+
 		$context->registerEventListener(NodeCreatedEvent::class, FileEventsListener::class);
 		$context->registerEventListener(BeforeNodeTouchedEvent::class, FileEventsListener::class);
 		$context->registerEventListener(NodeTouchedEvent::class, FileEventsListener::class);
@@ -116,12 +119,13 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(NodeWrittenEvent::class, FileEventsListener::class);
 		$context->registerEventListener(BeforeNodeDeletedEvent::class, FileEventsListener::class);
 		$context->registerEventListener(NodeDeletedEvent::class, FileEventsListener::class);
+		// TODO: what will be the impact of moving the version across storage on this listener?
 		$context->registerEventListener(NodeRenamedEvent::class, FileEventsListener::class);
 		$context->registerEventListener(NodeCopiedEvent::class, FileEventsListener::class);
 		$context->registerEventListener(BeforeNodeRenamedEvent::class, FileEventsListener::class);
 		$context->registerEventListener(BeforeNodeCopiedEvent::class, FileEventsListener::class);
-		
-		$context->registerEventListener(NodeWrittenEvent::class, MetadataFileEvents::class);
+
+		$context->registerEventListener(NodeWrittenEvent::class, VersionAuthorListener::class);
 	}
 
 	public function boot(IBootContext $context): void {

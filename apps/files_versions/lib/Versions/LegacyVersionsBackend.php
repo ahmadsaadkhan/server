@@ -46,7 +46,7 @@ use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
 
-class LegacyVersionsBackend implements IVersionBackend, IDeletableVersionBackend, INeedSyncVersionBackend, IMetadataVersionBackend {
+class LegacyVersionsBackend implements IVersionBackend, IDeletableVersionBackend, INeedSyncVersionBackend, IMetadataVersionBackend, IVersionsImporterBackend {
 	public function __construct(
 		private IRootFolder $rootFolder,
 		private IUserManager $userManager,
@@ -159,6 +159,21 @@ class LegacyVersionsBackend implements IVersionBackend, IDeletableVersionBackend
 	}
 
 	public function createVersion(IUser $user, FileInfo $file) {
+		$userFolder = $this->rootFolder->getUserFolder($user->getUID());
+		$relativePath = $userFolder->getRelativePath($file->getPath());
+		$userView = new View('/' . $user->getUID());
+		// create all parent folders
+		Storage::createMissingDirectories($relativePath, $userView);
+
+		Storage::scheduleExpire($user->getUID(), $relativePath);
+
+		// store a new version of a file
+		$userView->copy('files/' . $relativePath, 'files_versions/' . $relativePath . '.v' . $file->getMtime());
+		// ensure the file is scanned
+		$userView->getFileInfo('files_versions/' . $relativePath . '.v' . $file->getMtime());
+	}
+
+	public function writeVersion(IUser $user, int $revision, stream $fileContent) {
 		$userFolder = $this->rootFolder->getUserFolder($user->getUID());
 		$relativePath = $userFolder->getRelativePath($file->getPath());
 		$userView = new View('/' . $user->getUID());
@@ -295,5 +310,53 @@ class LegacyVersionsBackend implements IVersionBackend, IDeletableVersionBackend
 
 		$versionEntity->setMetadataValue($key, $value);
 		$this->versionsMapper->update($versionEntity);
+	}
+
+	public function importVersionsForFile(IUser $user, FileInfo $target, array $versions): void {
+		$userFolder = $this->rootFolder->getUserFolder($user->getUID());
+		$relativePath = $userFolder->getRelativePath($target->getPath());
+		$userView = new View('/' . $user->getUID());
+		// create all parent folders
+		Storage::createMissingDirectories($relativePath, $userView);
+		Storage::scheduleExpire($user->getUID(), $relativePath);
+
+		foreach ($versions as $version) {
+			// 1. Move the file to the new location
+			$versionPath = $version->get();
+			$newVersionPath = 'files_versions/' . $relativePath . '.v' . $version->getTimestamp();
+			$userView->rename($versionPath, $newVersionPath);
+			// ensure the file is scanned
+			$userView->getFileInfo($newVersionPath);
+
+			// $destinationMount = $userView->getMount()->getStorage()
+			// $originalMount = $version->getVersionPath();
+			// $originalVersionCache = $originalMount->getStorage()->getCache();
+			// $revision = $version->getTimestamp();
+
+			// $versionInternalPath = $versionFolder->getInternalPath() . '/' . $revision;
+			// $originalVersionInternalPath = $target->getInternalPath();
+
+			// $destinationMount->getStorage()->moveFromStorage($originalMount->getStorage(), $originalVersionInternalPath, $versionInternalPath);
+			// $destinationMount->getStorage()->getCache()->moveFromCache($originalVersionCache, $originalVersionCache->get($originalVersionInternalPath), $versionInternalPath);
+
+			// 2. Create the entity in the database
+			$versionEntity = new VersionEntity();
+			$versionEntity->setFileId($target->getId());
+			$versionEntity->setTimestamp($version->getTimestamp());
+			$versionEntity->setSize($version->getSize());
+			$versionEntity->setMimetype($this->mimeTypeLoader->getId($version->getMimetype()));
+			if ($version instanceof IMetadataVersion) {
+				$versionEntity->setMetadata($version->getMetadata());
+			}
+			$this->versionsMapper->insert($versionEntity);
+		}
+	}
+
+	public function clearVersionsForFile(IUser $user, FileInfo $node): void {
+		$userFolder = $this->rootFolder->getUserFolder($user->getUID());
+		$relativePath = $userFolder->getRelativePath($node->getPath());
+
+		Storage::delete($relativePath);
+		$this->versionsMapper->deleteAllVersionsForFileId($node->getId());
 	}
 }

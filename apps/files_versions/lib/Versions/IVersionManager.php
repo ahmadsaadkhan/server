@@ -25,6 +25,9 @@ declare(strict_types=1);
  */
 namespace OCA\Files_Versions\Versions;
 
+use OCP\Files\Node;
+use OCP\IUser;
+
 /**
  * @since 15.0.0
  */
@@ -37,4 +40,14 @@ interface IVersionManager extends IVersionBackend {
 	 * @since 15.0.0
 	 */
 	public function registerBackend(string $storageType, IVersionBackend $backend);
+
+	/**
+	 * Move versions across different backends
+	 *
+	 * @param IUser $user
+	 * @param Node $source
+	 * @param Node $target
+	 * @since 29.0.0
+	 */
+	public function moveVersionsAcrossBackends(IUser $user, Node $source, Node $target): void;
 }
